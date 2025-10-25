@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portofolio Buku Interaktif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fef3c7 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .background-decoration {
+            position: fixed;
+            inset: 0;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-circle-1 {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            width: 256px;
+            height: 256px;
+            background: #fbbf24;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .bg-circle-2 {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 384px;
+            height: 384px;
+            background: #fb923c;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .book-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            z-index: 10;
+        }
+
+        .book-shadow {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            filter: blur(40px);
+            transform: translateY(32px) scale(0.95);
+            border-radius: 8px;
+        }
+
+        .book {
+            position: relative;
+            background: linear-gradient(to right, #78350f, #92400e);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 
+                        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .book-spine {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 48px;
+            background: linear-gradient(to right, #1c0a00, #78350f);
+            border-radius: 8px 0 0 8px;
+            box-shadow: inset -2px 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .pages-container {
+            position: relative;
+            background: linear-gradient(135deg, #fffbeb 0%, #ffedd5 100%);
+            border-radius: 8px;
+            min-height: 600px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .page-content {
+            padding: 48px;
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .page-content.flipping {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .page-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                #fbbf24 50%, 
+                transparent 100%);
+            opacity: 0.3;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .nav-button {
+            background: transparent;
+            border: none;
+            color: #fef3c7;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #92400e;
+            color: white;
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-indicators {
+            display: flex;
+            gap: 8px;
+        }
+
+        .indicator {
+            height: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            background: #78350f;
+        }
+
+        .indicator.active {
+            width: 32px;
+            background: #fef3c7;
+        }
+
+        .indicator:not(.active) {
+            width: 8px;
+        }
+
+        /* Page Styles */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.7s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .cover-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .cover-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .cover-page h1 {
+            font-size: 4rem;
+            color: #78350f;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        .divider {
+            width: 128px;
+            height: 4px;
+            background: linear-gradient(to right, transparent, #fbbf24, transparent);
+            margin: 24px auto;
+        }
+
+        .cover-page .quote {
+            font-size: 1.5rem;
+            color: #92400e;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        .cover-page .subtitle {
+            font-size: 1.125rem;
+            color: #b45309;
+            max-width: 500px;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 32px;
+            right: 32px;
+            color: #fbbf24;
+            font-size: 14px;
+        }
+
+        .page-icon {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            font-size: 48px;
+            color: #fbbf24;
+        }
+
+        .content-section h2 {
+            font-size: 3rem;
+            color: #78350f;
+            margin-bottom: 32px;
+            font-weight: bold;
+        }
+
+        .content-text {
+            font-size: 1.125rem;
+            color: #78350f;
+            line-height: 1.8;
+            margin-bottom: 32px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .info-card h3 {
+            color: #78350f;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .info-card p {
+            color: #92400e;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .skill-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .skill-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #78350f;
+        }
+
+        .skill-percentage {
+            color: #b45309;
+            font-weight: bold;
+        }
+
+        .skill-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #fef3c7;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .skill-bar {
+            height: 100%;
+            background: linear-gradient(to right, #f59e0b, #fb923c);
+            border-radius: 6px;
+            transition: width 1s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #f59e0b;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .project-icon {
+            font-size: 40px;
+        }
+
+        .project-content {
+            flex: 1;
+        }
+
+        .project-card h3 {
+            font-size: 1.5rem;
+            color: #78350f;
+            margin-bottom: 8px;
+        }
+
+        .project-card p {
+            color: #92400e;
+            margin-bottom: 16px;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-tag {
+            background: #fef3c7;
+            color: #78350f;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .contact-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .contact-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #f59e0b;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .contact-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .contact-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .contact-card:hover .contact-icon {
+            transform: scale(1.1);
+        }
+
+        .contact-card h3 {
+            color: #78350f;
+            font-size: 1.125rem;
+            margin-bottom: 8px;
+        }
+
+        .contact-card p {
+            color: #92400e;
+        }
+
+        .contact-page .outro {
+            color: #b45309;
+            font-style: italic;
+            margin-top: 32px;
+            font-size: 1.125rem;
+        }
+
+        @media (max-width: 768px) {
+            .book {
+                padding: 24px;
+            }
+
+            .page-content {
+                padding: 24px;
+            }
+
+            .cover-page h1 {
+                font-size: 2.5rem;
+            }
+
+            .content-section h2 {
+                font-size: 2rem;
+            }
+
+            .nav-button span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-decoration">
+        <div class="bg-circle-1"></div>
+        <div class="bg-circle-2"></div>
+    </div>
+
+    <div class="book-container">
+        <div class="book-shadow"></div>
+        
+        <div class="book">
+            <div class="book-spine"></div>
+            
+            <div class="pages-container">
+                <div class="page-content" id="pageContent">
+                    <!-- Cover Page -->
+                    <div class="page active" id="page0">
+                        <div class="cover-page">
+                            <div class="cover-icon">📖</div>
+                            <h1>
+                                Portofolio
+                            </h1>
+                            <h1>Bintang Satria Dirgantara</h1>
+                            <div class="divider"></div>
+                            <p class="quote">"Setiap halaman menceritakan sebuah perjalanan"</p>
+                            <p class="subtitle">Selamat datang di buku digital saya. Geser ke kanan untuk memulai perjalanan!</p>
+                            <div class="page-number">Halaman 1</div>
+                        </div>
+                    </div>
+
+                    <!-- About Page -->
+                    <div class="page" id="page1">
+                        <div class="content-section">
+                            <h2>👤 Tentang Saya</h2>
+                            <p class="content-text">
+                                Halo! Saya adalah seorang profesional yang passionate dalam bidang teknologi dan kreativitas. 
+                                Dengan pengalaman bertahun-tahun, saya telah mengerjakan berbagai proyek menarik yang 
+                                menggabungkan inovasi dan solusi praktis.
+                            </p>
+
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <h3>Pengalaman</h3>
+                                    <p>5+ tahun di industri teknologi</p>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Lokasi</h3>
+                                    <p>Indonesia</p>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Spesialisasi</h3>
+                                    <p>Web Development & Design</p>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Passion</h3>
+                                    <p>Menciptakan pengalaman digital</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="page-number">Halaman 2</div>
+                    </div>
+
+                    <!-- Skills Page -->
+                    <div class="page" id="page2">
+                        <div class="content-section">
+                            <h2>🏆 Keahlian</h2>
+                            
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">JavaScript</span>
+                                    <span class="skill-percentage">90%</span>
+                                </div>
+                                <div class="skill-bar-bg">
+                                    <div class="skill-bar" style="width: 90%"></div>
+                                </div>
+                            </div>
+
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">React</span>
+                                    <span class="skill-percentage">85%</span>
+                                </div>
+                                <div class="skill-bar-bg">
+                                    <div class="skill-bar" style="width: 85%"></div>
+                                </div>
+                            </div>
+
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">UI/UX Design</span>
+                                    <span class="skill-percentage">80%</span>
+                                </div>
+                                <div class="skill-bar-bg">
+                                    <div class="skill-bar" style="width: 80%"></div>
+                                </div>
+                            </div>
+
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Node.js</span>
+                                    <span class="skill-percentage">75%</span>
+                                </div>
+                                <div class="skill-bar-bg">
+                                    <div class="skill-bar" style="width: 75%"></div>
+                                </div>
+                            </div>
+
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">CSS/Tailwind</span>
+                                    <span class="skill-percentage">90%</span>
+                                </div>
+                                <div class="skill-bar-bg">
+                                    <div class="skill-bar" style="width: 90%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="page-number">Halaman 3</div>
+                    </div>
+
+                    <!-- Projects Page -->
+                    <div class="page" id="page3">
+                        <div class="page-icon"></div>
+                        <div class="content-section">
+                            <h2>💼 Proyek</h2>
+
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <div class="project-icon">🛒</div>
+                                    <div class="project-content">
+                                        <h3>E-Commerce Platform</h3>
+                                        <p>Platform belanja online modern dengan fitur lengkap</p>
+                                        <div class="tech-tags">
+                                            <span class="tech-tag">React</span>
+                                            <span class="tech-tag">Node.js</span>
+                                            <span class="tech-tag">MongoDB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <div class="project-icon">💼</div>
+                                    <div class="project-content">
+                                        <h3>Portfolio Website</h3>
+                                        <p>Website portfolio interaktif dengan desain kreatif</p>
+                                        <div class="tech-tags">
+                                            <span class="tech-tag">React</span>
+                                            <span class="tech-tag">Tailwind</span>
+                                            <span class="tech-tag">Framer Motion</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <div class="project-icon">📱</div>
+                                    <div class="project-content">
+                                        <h3>Mobile App</h3>
+                                        <p>Aplikasi mobile untuk produktivitas harian</p>
+                                        <div class="tech-tags">
+                                            <span class="tech-tag">React Native</span>
+                                            <span class="tech-tag">Firebase</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="page-number">Halaman 4</div>
+                    </div>
+
+                    <!-- Contact Page -->
+                    <div class="page" id="page4">
+                        <div class="page-icon">✉️</div>
+                        <div class="contact-page">
+                            <h2 style="font-size: 3rem; color: #78350f; margin-bottom: 24px;">Hubungi Saya</h2>
+                            <p class="content-text" style="text-align: center; max-width: 600px;">
+                                Tertarik untuk berkolaborasi atau punya pertanyaan? 
+                                Jangan ragu untuk menghubungi saya!
+                            </p>
+
+                            <div class="contact-grid">
+                                <a href__="mailto:email@example.com" class="contact-card">
+                                    <div class="contact-icon">📧</div>
+                                    <h3>Email</h3>
+                                    <p>bee.ntanglebah@gmail.com</p>
+                                </a>
+
+                                <a href__="https://linkedin.com" target="_blank" class="contact-card">
+                                    <div class="contact-icon">💼</div>
+                                    <h3>LinkedIn</h3>
+                                    <p>linkedin.com/in/profile</p>
+                                </a>
+
+                                <a href__="https://github.com" target="_blank" class="contact-card">
+                                    <div class="contact-icon">💻</div>
+                                    <h3>GitHub</h3>
+                                    <p>github.com/bangbee</p>
+                                </a>
+
+                                <a href__="tel:+62123456789" class="contact-card">
+                                    <div class="contact-icon">📞</div>
+                                    <h3>Telepon</h3>
+                                    <p>+62 123 456 789</p>
+                                </a>
+                            </div>
+
+                            <p class="outro">"Terima kasih telah membaca buku digital saya!"</p>
+                        </div>
+                        <div class="page-number">Halaman 5 - Akhir</div>
+                    </div>
+                </div>
+                <div class="page-line"></div>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="prevBtn" onclick="prevPage()">
+                    ◀ <span>Halaman Sebelumnya</span>
+                </button>
+
+                <div class="page-indicators" id="indicators"></div>
+
+                <button class="nav-button" id="nextBtn" onclick="nextPage()">
+                    <span>Halaman Selanjutnya</span> ▶
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const totalPages = 5;
+        let isFlipping = false;
+
+        // Initialize page indicators
+        function initIndicators() {
+            const indicatorsContainer = document.getElementById('indicators');
+            for (let i = 0; i < totalPages; i++) {
+                const indicator = document.createElement('div');
+                indicator.className = 'indicator' + (i === 0 ? ' active' : '');
+                indicator.id = 'indicator' + i;
+                indicatorsContainer.appendChild(indicator);
+            }
+        }
+
+        // Update page display
+        function updatePage() {
+            // Hide all pages
+            for (let i = 0; i < totalPages; i++) {
+                document.getElementById('page' + i).classList.remove('active');
+                document.getElementById('indicator' + i).classList.remove('active');
+            }
+
+            // Show current page
+            document.getElementById('page' + currentPage).classList.add('active');
+            document.getElementById('indicator' + currentPage).classList.add('active');
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages - 1;
+        }
+
+        // Next page function
+        function nextPage() {
+            if (currentPage < totalPages - 1 && !isFlipping) {
+                isFlipping = true;
+                document.getElementById('pageContent').classList.add('flipping');
+                
+                setTimeout(() => {
+                    currentPage++;
+                    updatePage();
+                    document.getElementById('pageContent').classList.remove('flipping');
+                    isFlipping = false;
+                }, 600);
+            }
+        }
+
+        // Previous page function
+        function prevPage() {
+            if (currentPage > 0 && !isFlipping) {
+                isFlipping = true;
+                document.getElementById('pageContent').classList.add('flipping');
+                
+                setTimeout(() => {
+                    currentPage--;
+                    updatePage();
+                    document.getElementById('pageContent').classList.remove('flipping');
+                    isFlipping = false;
+                }, 600);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextPage();
+            } else if (e.key === 'ArrowLeft') {
+                prevPage();
+            }
+        });
+
+        // Touch swipe navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                nextPage();
+            }
+            if (touchEndX > touchStartX + 50) {
+                prevPage();
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            initIndicators();
+            updatePage();
+        };
+    </script>
+</body>
+</html>
